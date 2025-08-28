@@ -10,9 +10,9 @@ class ResponseBuilder:
     """
     Builds assistant responses using Hugging Face LLM.
     Handles:
-      - Clarifications
+      - Clarifications (dynamic, based on missing/provided args)
       - Tool results
-      - Greetings / fallback
+      - Greetings / fallback / chit-chat
     """
 
     def __init__(self):
@@ -22,7 +22,8 @@ class ResponseBuilder:
         self,
         results: Dict[str, Any],
         clarifications: List[Dict[str, Any]],
-        user_message: str = ""
+        user_message: str = "",
+        state: Dict[str, Any] = None   # NEW: pass conversation state
     ) -> str:
         """
         Build a natural chatbot response with the help of LLM.
@@ -50,6 +51,34 @@ class ResponseBuilder:
 
         # ---- Case 1: Explicit clarifications ----
         if clarifications:
+            # If we have conversation state, build smarter clarification
+            if state and state.get("status") == "awaiting_args":
+                active_intent = state.get("active_intent")
+                pending_args = state.get("pending_args", [])
+                provided_args = state.get("provided_args", {})
+
+                # Build a dynamic message
+                ack_parts = []
+                for arg, val in provided_args.items():
+                    if val not in (None, ""):
+                        ack_parts.append(f"{arg} sudah tercatat ({val})")
+
+                ack_text = ""
+                if ack_parts:
+                    ack_text = "Oke, saya sudah mencatat " + ", ".join(ack_parts) + ". "
+
+                if pending_args:
+                    missing_text = (
+                        "Saya masih perlu informasi berikut: "
+                        + ", ".join(pending_args)
+                        + ". Bisa Anda lengkapi?"
+                    )
+                else:
+                    missing_text = "Semua data sudah lengkap, saya bisa melanjutkan proses."
+
+                return ack_text + missing_text
+
+            # fallback to LLM style clarification
             clarif_text = {"clarifications": clarifications}
             system_prompt = (
                 "Anda adalah asisten HR. Permintaan pengguna masih kurang informasi. "
