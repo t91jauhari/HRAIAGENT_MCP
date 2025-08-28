@@ -1,0 +1,13 @@
+version: "3.9"
+
+services:
+  hr-ai-backend:
+    build: .
+    container_name: hr_ai_mcp_backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - .:/app   # optional: live code reload
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload

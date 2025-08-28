@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+pydantic
+requests
+langchain
+langgraph
+mcp
+structlog
+python-dotenv

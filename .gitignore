@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+
+# Virtual env
+venv/
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# Docker
+*.log
+*.pid
+*.sock
+*.tar
+*.gz
+*.swp
+
+# Bytecode cache
+.pytest_cache/
+.mypy_cache/
