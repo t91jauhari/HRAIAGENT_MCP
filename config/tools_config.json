@@ -1,0 +1,140 @@
+{
+  "tools": [
+    {
+      "name": "employee_profile",
+      "title": "Employee Profile",
+      "description": "Fetch employee personal and job details (name, department, manager, join date).",
+      "input_model": "EmployeeProfileInput",
+      "examples": [
+        "Siapa manager saya?",
+        "Kapan saya bergabung di perusahaan?",
+        "Detail profil karyawan E-001"
+      ],
+      "keywords": ["profil", "biodata", "department", "manager", "join date", "personal details"]
+    },
+    {
+      "name": "leave_request",
+      "title": "Submit Leave Request",
+      "description": "Submit a leave request for an employee with start/end dates and leave type.",
+      "input_model": "LeaveRequestInput",
+      "examples": [
+        "Ajuin cuti tanggal 10-12 Agustus",
+        "Saya mau cuti sakit minggu depan",
+        "Buat cuti tahunan 2 hari"
+      ],
+      "keywords": ["ajukan cuti", "request leave", "maternity leave", "sick leave", "annual leave"]
+    },
+    {
+      "name": "leave_balance",
+      "title": "Leave Balance",
+      "description": "Check remaining leave balance (annual, sick, maternity, etc).",
+      "input_model": "LeaveBalanceInput",
+      "examples": [
+        "Sisa cuti tahunan saya berapa?",
+        "Berapa jatah cuti sakit saya?",
+        "Cek quota cuti"
+      ],
+      "keywords": ["sisa cuti", "leave quota", "remaining leave", "jatah cuti"]
+    },
+    {
+      "name": "leave_status",
+      "title": "Leave Status",
+      "description": "Check leave records and approval status for an employee within a given date range.",
+      "input_model": "LeaveStatusInput",
+      "examples": [
+        "Cuti saya tanggal 5-7 Juli sudah disetujui belum?",
+        "Status pengajuan cuti minggu lalu",
+        "Apakah cuti saya ditolak?"
+      ],
+      "keywords": ["status cuti", "leave approval", "pengajuan cuti", "riwayat cuti"]
+    },
+    {
+      "name": "leave_cancel",
+      "title": "Cancel Leave Request",
+      "description": "Cancel a pending or approved leave request.",
+      "input_model": "LeaveCancelInput",
+      "examples": [
+        "Batalkan cuti saya tanggal 10 Agustus",
+        "Cancel pengajuan cuti kemarin"
+      ],
+      "keywords": ["batalkan cuti", "cancel leave", "hapus pengajuan cuti"]
+    },
+    {
+      "name": "payroll_lookup",
+      "title": "Payroll Lookup",
+      "description": "Retrieve payroll details for an employee in a given period (net pay, allowances, deductions).",
+      "input_model": "PayrollLookupInput",
+      "examples": [
+        "Berapa gaji saya bulan ini?",
+        "Tolong cek payroll periode Juli 2025"
+      ],
+      "keywords": ["gaji bulan ini", "payroll", "slip gaji", "salary details"]
+    },
+    {
+      "name": "payroll_history",
+      "title": "Payroll History",
+      "description": "Retrieve payroll details across multiple months.",
+      "input_model": "PayrollHistoryInput",
+      "examples": [
+        "Tunjukkan gaji saya 3 bulan terakhir",
+        "Payroll history 2024"
+      ],
+      "keywords": ["riwayat gaji", "payroll history", "salary history"]
+    },
+    {
+      "name": "deduction_reason",
+      "title": "Deduction Reason",
+      "description": "Explain deduction in payroll (e.g., unpaid leave, late attendance, loan repayment).",
+      "input_model": "DeductionReasonInput",
+      "examples": [
+        "Kenapa gaji saya berkurang bulan ini?",
+        "Apa alasan potongan Rp1.000.000 di slip gaji saya?"
+      ],
+      "keywords": ["pengurangan gaji", "deduction", "potongan gaji", "alasan gaji berkurang"]
+    },
+    {
+      "name": "attendance_check",
+      "title": "Attendance Check",
+      "description": "Verify attendance records for an employee (present, absent, late).",
+      "input_model": "AttendanceCheckInput",
+      "examples": [
+        "Apakah saya hadir tanggal 15 Agustus?",
+        "Cek apakah saya absen kemarin"
+      ],
+      "keywords": ["absensi", "attendance", "late", "present", "absent"]
+    },
+    {
+      "name": "attendance_summary",
+      "title": "Attendance Summary",
+      "description": "Summarize attendance for an employee over a given period.",
+      "input_model": "AttendanceSummaryInput",
+      "examples": [
+        "Ringkas kehadiran saya bulan Agustus",
+        "Berapa hari saya absen tahun ini?"
+      ],
+      "keywords": ["rekap absensi", "attendance summary", "jumlah hadir", "jumlah absen"]
+    },
+    {
+      "name": "benefit_summary",
+      "title": "Benefit Summary",
+      "description": "Summarize employee benefits (medical, insurance, allowances).",
+      "input_model": "BenefitSummaryInput",
+      "examples": [
+        "Apa saja benefit saya?",
+        "Cek asuransi kesehatan saya"
+      ],
+      "keywords": ["benefit", "tunjangan", "asuransi", "employee benefits"]
+    },
+    {
+      "name": "hr_policy",
+      "title": "HR Policy Lookup",
+      "description": "Fetch HR policy text or answer questions about company rules.",
+      "input_model": "HRPolicyInput",
+      "examples": [
+        "Apa kebijakan cuti melahirkan?",
+        "Bagaimana aturan lembur?"
+      ],
+      "keywords": ["hr policy", "aturan perusahaan", "kebijakan", "peraturan"]
+    }
+  ]
+}

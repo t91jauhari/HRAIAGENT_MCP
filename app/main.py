@@ -2,6 +2,7 @@ import logging
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from app.orchestrator.orchestrator import AgentOrchestrator
+from app.planner.orchestrator import AutonomousChatOrchestrator
 
 # Initialize logger
 logging.basicConfig(level=logging.INFO)
@@ -12,6 +13,9 @@ app = FastAPI(title="HR-AI MCP Backend", version="1.0.0")
 
 # Initialize Agent
 agent = AgentOrchestrator()
+#autonomous Agent
+orchestrator = AutonomousChatOrchestrator()
+
 
 # ---- Request / Response Models ----
 class ChatRequest(BaseModel):
@@ -43,6 +47,18 @@ async def chat_endpoint(req: ChatRequest):
     except Exception as e:
         logger.error(f"[CHAT-ERROR] {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/chat_autonomous")
+async def chat_autonomous(payload: dict):
+    """
+    Endpoint for autonomous HR chat.
+    Accepts user message and returns full pipeline output.
+    """
+    user_message = payload.get("message", "")
+    if not user_message:
+        return {"error": "Message is required"}
+    return await orchestrator.handle_message(user_message)
 
 
 @app.get("/health")

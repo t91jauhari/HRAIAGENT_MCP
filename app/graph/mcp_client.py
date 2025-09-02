@@ -148,5 +148,20 @@ class MCPToolClient:
             logger.error(f"[MCP-CLIENT] Error while calling tool '{safe_tool}': {e}", exc_info=True)
             raise
 
+    async def call_tool(self, tool: str, args: Dict[str, Any], as_json: bool = True) -> Dict[str, Any]:
+        result = await self.call(tool, args)
+
+        if as_json:
+            if isinstance(result, dict):
+                return result
+            if isinstance(result, str):
+                try:
+                    return json.loads(result)
+                except Exception:
+                    # Standardize plain string into dict for safety
+                    return {"raw_text": result}
+            raise ValueError(f"Tool {tool} did not return dict/JSON.")
+        return result
+
 
 mcp_client = MCPToolClient()

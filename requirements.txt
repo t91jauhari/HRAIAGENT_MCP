@@ -7,3 +7,6 @@ langgraph
 mcp
 structlog
 python-dotenv
+streamlit
+graphviz
+langdetect

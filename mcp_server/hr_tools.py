@@ -4,84 +4,146 @@ import json
 from typing import Any
 import mcp.types as types
 
-from .models import (
-    LeaveRequestInput, LeaveRequestOutput,
-    PayrollLookupInput, PayrollLookupOutput, PayrollItem,
-    LeaveStatusInput, LeaveStatusOutput, LeaveBalance,
-)
+from . import models
 
 logger = logging.getLogger("mcp.hr_tools")
 
 
 class HRServices:
-    def submit_leave(self, inp: LeaveRequestInput) -> LeaveRequestOutput:
+    def submit_leave(self, inp: models.LeaveRequestInput) -> models.LeaveRequestOutput:
         rid = str(uuid.uuid4())
         logger.info(f"[MCP-TOOLS] Submit leave employee={inp.employee_id}, {inp.start}→{inp.end}")
-        return LeaveRequestOutput(
+        return models.LeaveRequestOutput(
             request_id=rid,
             status="needs_approval",
             message=f"Leave request {inp.start} → {inp.end} submitted for {inp.employee_id}",
         )
 
-    def payroll_lookup(self, inp: PayrollLookupInput) -> PayrollLookupOutput:
+    def leave_balance(self, inp: models.LeaveBalanceInput) -> models.LeaveBalanceOutput:
+        balances = [
+            models.LeaveBalanceItem(type="annual", remaining_days=8),
+            models.LeaveBalanceItem(type="sick", remaining_days=4),
+            models.LeaveBalanceItem(type="maternity", remaining_days=90),
+        ]
+        return models.LeaveBalanceOutput(
+            employee_id=inp.employee_id,
+            balances=balances
+        )
+
+    def payroll_lookup(self, inp: models.PayrollLookupInput) -> models.PayrollLookupOutput:
         period = inp.period or "2025-08"
         items = [
-            PayrollItem(code="BASIC", label="Basic Salary", amount=20_000_000.0),
-            PayrollItem(code="ALLOW", label="Allowance", amount=3_000_000.0),
-            PayrollItem(code="DEDUCT", label="Deduction", amount=-1_000_000.0),
+            models.PayrollItem(code="BASIC", label="Basic Salary", amount=20_000_000.0),
+            models.PayrollItem(code="ALLOW", label="Allowance", amount=3_000_000.0),
+            models.PayrollItem(code="DEDUCT", label="Deduction (Unpaid leave)", amount=-1_000_000.0),
         ]
         net = sum(i.amount for i in items)
         logger.info(f"[MCP-TOOLS] Payroll lookup employee={inp.employee_id}, period={period}, net={net}")
-        return PayrollLookupOutput(employee_id=inp.employee_id, period=period, net_pay=net, items=items)
+        return models.PayrollLookupOutput(employee_id=inp.employee_id, period=period, net_pay=net, items=items)
 
-    def leave_status(self, inp: LeaveStatusInput) -> LeaveStatusOutput:
+    def deduction_reason(self, inp: models.DeductionReasonInput):
+        logger.info(f"[MCP-TOOLS] Deduction reason for {inp.employee_id} period={inp.period}")
+        return {
+            "employee_id": inp.employee_id,
+            "period": inp.period,
+            "reason": "Unpaid leave for 3 days in this period"
+        }
+
+    def leave_status(self, inp: models.LeaveStatusInput) -> models.LeaveStatusOutput:
         balances = [
-            LeaveBalance(type="annual", remaining_days=10),
-            LeaveBalance(type="sick", remaining_days=5),
+            models.LeaveBalanceItem(type="annual", remaining_days=10),
+            models.LeaveBalanceItem(type="sick", remaining_days=5),
         ]
         logger.info(f"[MCP-TOOLS] Leave status lookup employee={inp.employee_id}")
-        return LeaveStatusOutput(employee_id=inp.employee_id, balances=balances)
+        return models.LeaveStatusOutput(employee_id=inp.employee_id, balances=balances)
+
+    def attendance_check(self, inp: models.AttendanceCheckInput):
+        logger.info(f"[MCP-TOOLS] Attendance check employee={inp.employee_id}, period={inp.period}")
+        return {
+            "employee_id": inp.employee_id,
+            "period": inp.period,
+            "late_days": [
+                {"date": "2025-08-18", "minutes_late": 120}
+            ]
+        }
+
+    def attendance_summary(self, inp: models.AttendanceSummaryInput):
+        logger.info(f"[MCP-TOOLS] Attendance summary employee={inp.employee_id}, period={inp.period}")
+        return {
+            "employee_id": inp.employee_id,
+            "period": inp.period,
+            "summary": {
+                "present": 18,
+                "absent": 2,
+                "late": 1
+            }
+        }
+
+    def benefit_summary(self, inp: models.BenefitSummaryInput):
+        logger.info(f"[MCP-TOOLS] Benefit summary for {inp.employee_id}")
+        return {
+            "employee_id": inp.employee_id,
+            "benefits": [
+                {"code": "HLTH", "label": "Health Insurance", "value": "Active"},
+                {"code": "MEAL", "label": "Meal Allowance", "value": "Rp 500,000"}
+            ]
+        }
+
 
 
 services = HRServices()
 
+# 🔑 Central registry: tool name → input model
+MODEL_MAP = {
+    "leave_request": models.LeaveRequestInput,
+    "leave_status": models.LeaveStatusInput,
+    "payroll_lookup": models.PayrollLookupInput,
+    "payroll_history": models.PayrollHistoryInput,
+    "deduction_reason": models.DeductionReasonInput,
+    "attendance_check": models.AttendanceCheckInput,
+    "attendance_summary": models.AttendanceSummaryInput,
+    "leave_balance": models.LeaveBalanceInput,
+    "leave_cancel": models.LeaveCancelInput,
+    "benefit_summary": models.BenefitSummaryInput,
+    "hr_policy": models.HRPolicyInput,
+    "employee_profile": models.EmployeeProfileInput,
+}
+
 
 # ---- Dispatcher ----
 async def call_tool(name: str, arguments: dict[str, Any]) -> list[types.ContentBlock]:
-    if name == "leave_request":
-        result = services.submit_leave(LeaveRequestInput(**arguments))
-        return [types.TextContent(type="text", text=json.dumps(result.model_dump()))]
+    if not hasattr(services, name):
+        raise ValueError(f"Unknown tool: {name}")
 
-    if name == "payroll_lookup":
-        result = services.payroll_lookup(PayrollLookupInput(**arguments))
-        return [types.TextContent(type="text", text=json.dumps(result.model_dump()))]
+    input_cls = MODEL_MAP.get(name)
+    if input_cls:
+        inp = input_cls(**arguments)  # ✅ Always validated Pydantic model
+    else:
+        inp = arguments
 
-    if name == "leave_status":
-        result = services.leave_status(LeaveStatusInput(**arguments))
-        return [types.TextContent(type="text", text=json.dumps(result.model_dump()))]
+    result = getattr(services, name)(inp)
 
-    raise ValueError(f"Unknown tool: {name}")
+    # ✅ Normalize output to dict
+    if hasattr(result, "model_dump"):  # Pydantic v2
+        payload = result.model_dump()
+    elif hasattr(result, "dict"):  # Pydantic v1 fallback
+        payload = result.dict()
+    else:
+        payload = result
 
+    return [types.TextContent(type="text", text=json.dumps(payload))]
 
 # ---- Tool Registry ----
 async def list_tools() -> list[types.Tool]:
-    return [
-        types.Tool(
-            name="leave_request",
-            title="Submit Leave Request",
-            description="Submit a leave request for an employee",
-            inputSchema=LeaveRequestInput.model_json_schema()
-        ),
-        types.Tool(
-            name="payroll_lookup",
-            title="Payroll Lookup",
-            description="Lookup payroll details for an employee in a period",
-            inputSchema=PayrollLookupInput.model_json_schema()
-        ),
-        types.Tool(
-            name="leave_status",
-            title="Leave Status",
-            description="Check leave balances for an employee",
-            inputSchema=LeaveStatusInput.model_json_schema()
-        ),
-    ]
+    tools = []
+    for name, input_cls in MODEL_MAP.items():
+        tools.append(
+            types.Tool(
+                name=name,
+                title=name.replace("_", " ").title(),
+                description=f"{name.replace('_', ' ').capitalize()} tool",
+                inputSchema=input_cls.model_json_schema()
+            )
+        )
+    return tools
+
